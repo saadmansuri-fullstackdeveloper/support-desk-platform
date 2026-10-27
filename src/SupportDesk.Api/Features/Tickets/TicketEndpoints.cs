@@ -1,67 +1,9 @@
 using System.Collections.Concurrent;
 using System.ComponentModel.DataAnnotations;
+using SupportDesk.Api.Business;
+using SupportDesk.Api.Enum;
+using SupportDesk.Api.Models;
 
-public enum TicketStatus
-{
-    Open,
-    InProgress,
-    Resolved,
-    Closed
-}
-
-public sealed record Ticket(
-    Guid Id,
-    string Title,
-    string Description,
-    string CustomerEmail,
-    TicketStatus Status,
-    DateTimeOffset CreatedAt);
-
-public sealed record CreateTicketRequest(
-    [property: Required, StringLength(120, MinimumLength = 4)] string Title,
-    [property: Required, StringLength(4000, MinimumLength = 10)] string Description,
-    [property: Required, EmailAddress] string CustomerEmail);
-
-public sealed record UpdateTicketStatusRequest(TicketStatus Status);
-
-public sealed class TicketStore
-{
-    private readonly ConcurrentDictionary<Guid, Ticket> _tickets = new();
-
-    public IReadOnlyCollection<Ticket> GetAll() => _tickets.Values
-        .OrderByDescending(ticket => ticket.CreatedAt)
-        .ToArray();
-
-    public Ticket? Get(Guid id) => _tickets.GetValueOrDefault(id);
-
-    public Ticket Add(CreateTicketRequest request)
-    {
-        var ticket = new Ticket(
-            Guid.NewGuid(),
-            request.Title.Trim(),
-            request.Description.Trim(),
-            request.CustomerEmail.Trim(),
-            TicketStatus.Open,
-            DateTimeOffset.UtcNow);
-
-        _tickets[ticket.Id] = ticket;
-        return ticket;
-    }
-
-    public Ticket? UpdateStatus(Guid id, TicketStatus status)
-    {
-        while (_tickets.TryGetValue(id, out var current))
-        {
-            var updated = current with { Status = status };
-            if (_tickets.TryUpdate(id, updated, current))
-            {
-                return updated;
-            }
-        }
-
-        return null;
-    }
-}
 
 public static class TicketEndpoints
 {
