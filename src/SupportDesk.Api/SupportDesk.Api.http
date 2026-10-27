@@ -1,0 +1,17 @@
+@baseUrl = http://localhost:5000
+
+### Health
+GET {{baseUrl}}/health
+
+### Create a ticket
+POST {{baseUrl}}/api/tickets/
+Content-Type: application/json
+
+{
+  "title": "Unable to access my account",
+  "description": "The password reset link expires before I can use it.",
+  "customerEmail": "customer@example.com"
+}
+
+### List tickets
+GET {{baseUrl}}/api/tickets/
